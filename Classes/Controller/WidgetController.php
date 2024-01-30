@@ -49,7 +49,6 @@ class WidgetController extends ActionController
         if (($requestParameters['category'] ?? null) !== null) {
             $currentCategory = (int)$requestParameters['category'];
         }
-
         // TODO check if and why  plugin.tx_blog.persistence.storagePid != plugin.tx_blog.storagePid
         // remove getByLocalPid call (defined in dfau/toujou repository )
         if (method_exists($this->categoryRepository, 'getByLocalPid')) {
@@ -57,7 +56,6 @@ class WidgetController extends ActionController
         } else {
             $categories = $this->categoryRepository->findAll();
         }
-
         $this->view->assign('categories', $categories);
         $this->view->assign('currentCategory', $currentCategory);
         foreach ($categories as $category) {
