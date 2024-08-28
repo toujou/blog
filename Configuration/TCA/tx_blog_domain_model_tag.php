@@ -138,6 +138,7 @@ return [
                 ],
                 'foreign_table' => 'tx_blog_domain_model_tag',
                 'foreign_table_where' => 'AND tx_blog_domain_model_tag.pid=###CURRENT_PID### AND tx_blog_domain_model_tag.sys_language_uid IN (-1,0)',
+                'default' => 0,
             ],
         ],
         'l18n_diffsource' => [

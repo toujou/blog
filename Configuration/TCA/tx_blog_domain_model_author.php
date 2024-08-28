@@ -270,6 +270,7 @@ return [
             ],
             'foreign_table' => 'tx_blog_domain_model_author',
             'foreign_table_where' => 'AND tx_blog_domain_model_author.pid=###CURRENT_PID### AND tx_blog_domain_model_author.sys_language_uid IN (-1,0)',
+            'default' => 0
         ],
     ],
     'l18n_diffsource' => [
