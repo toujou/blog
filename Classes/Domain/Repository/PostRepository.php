@@ -89,6 +89,11 @@ class PostRepository extends Repository
             $query->equals('doktype', Constants::DOKTYPE_BLOG_POST)
         ];
 
+        $storagePidConstraint = $this->getStoragePidConstraint();
+        if ($storagePidConstraint instanceof ComparisonInterface) {
+            $constraints[] = $storagePidConstraint;
+        }
+
         if ($repositoryDemand->getPosts() !== []) {
             $constraints[] = $query->in('uid', $repositoryDemand->getPosts());
         } else {
