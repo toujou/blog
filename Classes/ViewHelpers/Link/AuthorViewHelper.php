@@ -70,7 +70,6 @@ class AuthorViewHelper extends AbstractTagBasedViewHelper
     {
         $uriBuilder = GeneralUtility::makeInstance(UriBuilder::class);
         $uriBuilder->reset()
-            ->setRequest($this->renderingContext->getRequest())
             ->setTargetPageUid($pageUid)
             ->setArguments($additionalParams);
         if ($rssFormat) {
@@ -96,7 +95,7 @@ class AuthorViewHelper extends AbstractTagBasedViewHelper
             return $this->tag->render();
         }
 
-        return $this->renderChildren();
+        return (string) $this->renderChildren();
     }
 
     protected function getRequest(): ServerRequestInterface

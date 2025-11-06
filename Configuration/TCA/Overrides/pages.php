@@ -137,6 +137,7 @@ $GLOBALS['TCA']['pages']['columns'] = array_replace_recursive(
             'config' => [
                 'type' => 'datetime',
                 'size' => '13',
+                'eval' => 'datetime,int',
                 'default' => '0',
                 'behaviour' => [
                     'allowLanguageSynchronization' => true
@@ -148,6 +149,7 @@ $GLOBALS['TCA']['pages']['columns'] = array_replace_recursive(
             'config' => [
                 'type' => 'datetime',
                 'size' => '13',
+                'eval' => 'datetime,int',
                 'default' => '0',
                 'behaviour' => [
                     'allowLanguageSynchronization' => true
@@ -165,7 +167,7 @@ $GLOBALS['TCA']['pages']['columns'] = array_replace_recursive(
                 'autoSizeMax' => 10,
                 'multiple' => 0,
                 'foreign_table' => 'tx_blog_domain_model_tag',
-                'foreign_table_where' => 'AND tx_blog_domain_model_tag.sys_language_uid IN (0,-1) AND tx_blog_domain_model_tag.pid = ###PAGE_TSCONFIG_ID### ORDER BY tx_blog_domain_model_tag.title ASC',
+                'foreign_table_where' => 'AND tx_blog_domain_model_tag.sys_language_uid IN (0,-1) ORDER BY tx_blog_domain_model_tag.title ASC',
                 'MM' => 'tx_blog_tag_pages_mm',
                 'behaviour' => [
                     'allowLanguageSynchronization' => true
@@ -179,7 +181,7 @@ $GLOBALS['TCA']['pages']['columns'] = array_replace_recursive(
                 'renderType' => 'selectMultipleSideBySide',
                 'multiple' => 0,
                 'foreign_table' => 'tx_blog_domain_model_author',
-                'foreign_table_where' => 'AND tx_blog_domain_model_author.sys_language_uid IN (0,-1) AND tx_blog_domain_model_author.pid = ###PAGE_TSCONFIG_ID### ORDER BY tx_blog_domain_model_author.name ASC',
+                'foreign_table_where' => 'AND tx_blog_domain_model_author.sys_language_uid IN (0,-1) ORDER BY tx_blog_domain_model_author.name ASC',
                 'MM' => 'tx_blog_post_author_mm',
                 'minitems' => 0,
                 'maxitems' => 99999,
@@ -213,7 +215,7 @@ $GLOBALS['TCA']['pages']['columns'] = array_replace_recursive(
 $GLOBALS['TCA']['pages']['types'][\T3G\AgencyPack\Blog\Constants::DOKTYPE_BLOG_POST]['columnsOverrides'] = [
     'categories' => [
         'config' => [
-            'foreign_table_where' => 'AND sys_category.sys_language_uid IN (0,-1) AND sys_category.pid = ###PAGE_TSCONFIG_ID###',
+            'foreign_table_where' => 'AND sys_category.sys_language_uid IN (0,-1)',
         ]
     ]
 ];

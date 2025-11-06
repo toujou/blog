@@ -77,15 +77,22 @@ class PostRepository extends Repository
     }
 
     /**
-     * @return Post[]
+     * @param PostRepositoryDemand $repositoryDemand;
+     *
+     * @return Post[]|\TYPO3\CMS\Extbase\Persistence\QueryResultInterface
      */
-    public function findByRepositoryDemand(PostRepositoryDemand $repositoryDemand): array
+    public function findByRepositoryDemand(PostRepositoryDemand $repositoryDemand)
     {
         $query = $this->createQuery();
 
         $constraints = [
             $query->equals('doktype', Constants::DOKTYPE_BLOG_POST)
         ];
+
+        $storagePidConstraint = $this->getStoragePidConstraint();
+        if ($storagePidConstraint instanceof ComparisonInterface) {
+            $constraints[] = $storagePidConstraint;
+        }
 
         if ($repositoryDemand->getPosts() !== []) {
             $constraints[] = $query->in('uid', $repositoryDemand->getPosts());
@@ -123,21 +130,7 @@ class PostRepository extends Repository
             $query->setLimit($limit);
         }
 
-        /** @var Post[] $result */
-        $result = $query->execute()->toArray();
-
-        if ($repositoryDemand->getPosts() !== []) {
-            // Sort manually selected posts by defined order in group field
-            $sortedPosts = array_flip($repositoryDemand->getPosts());
-            foreach ($result as $post) {
-                $sortedPosts[$post->getUid()] = $post;
-            }
-            $result = array_values(array_filter($sortedPosts, function ($value) {
-                return $value instanceof Post;
-            }));
-        }
-
-        return $result;
+        return $query->execute();
     }
 
     public function findAll(): QueryResultInterface
