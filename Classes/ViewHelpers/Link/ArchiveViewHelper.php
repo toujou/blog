@@ -11,9 +11,9 @@ declare(strict_types = 1);
 namespace T3G\AgencyPack\Blog\ViewHelpers\Link;
 
 use Psr\Http\Message\ServerRequestInterface;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Mvc\Web\Routing\UriBuilder;
+use TYPO3\CMS\Core\Routing\PageRouter;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractTagBasedViewHelper;
+use Webmozart\Assert\Assert;
 
 class ArchiveViewHelper extends AbstractTagBasedViewHelper
 {
@@ -45,12 +45,15 @@ class ArchiveViewHelper extends AbstractTagBasedViewHelper
             ?->getChildByName('archiveUid')
             ?->getValue() ?? 0);
 
-        $rssTypeNum = (int)(
-            $this->getRequest()->getAttribute('frontend.typoscript')->getSetupTree()
-            ->getChildByName('blog_rss_archive')
-            ?->getChildByName('typeNum')
-            ?->getValue() ?? 0
-        );
+        $rssTypeNum = null;
+        if ($rssFormat) {
+            $rssTypeNum = (int)(
+                $this->getRequest()->getAttribute('frontend.typoscript')->getSetupTree()
+                    ->getChildByName('blog_rss_archive')
+                    ?->getChildByName('typeNum')
+                    ?->getValue() ?? 0
+            );
+        }
 
         $arguments = [
             'year' => $year
@@ -58,14 +61,22 @@ class ArchiveViewHelper extends AbstractTagBasedViewHelper
         if ($month > 0) {
             $arguments['month'] = $month;
         }
-        $uriBuilder = GeneralUtility::makeInstance(UriBuilder::class);
-        $uriBuilder->reset()
-            ->setTargetPageUid($pageUid);
-        if ($rssFormat) {
-            $uriBuilder
-                ->setTargetPageType($rssTypeNum);
-        }
-        $uri = $uriBuilder->uriFor('listPostsByDate', $arguments, 'Post', 'Blog', 'Archive');
+
+        $site = $this->getRequest()->getAttribute('site');
+        Assert::notEmpty($site);
+
+        /** @var PageRouter $router */
+        $router = $site->getRouter();
+
+        $uri = (string) $router->generateUri($pageUid, [
+            'tx_blog_archive' => [
+                ...$arguments,
+                'controller' => 'Post',
+                'action' => 'listPostsByDate',
+            ],
+            'type' => $rssTypeNum,
+        ]);
+
         $linkText = $this->renderChildren() ?? implode('-', $arguments);
         if ($uri !== '') {
             $this->tag->addAttribute('href', $uri);

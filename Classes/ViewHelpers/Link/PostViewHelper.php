@@ -10,10 +10,11 @@ declare(strict_types = 1);
 
 namespace T3G\AgencyPack\Blog\ViewHelpers\Link;
 
+use Psr\Http\Message\ServerRequestInterface;
 use T3G\AgencyPack\Blog\Domain\Model\Post;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Mvc\Web\Routing\UriBuilder;
+use TYPO3\CMS\Core\Routing\PageRouter;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractTagBasedViewHelper;
+use Webmozart\Assert\Assert;
 
 class PostViewHelper extends AbstractTagBasedViewHelper
 {
@@ -39,13 +40,17 @@ class PostViewHelper extends AbstractTagBasedViewHelper
         $post = $this->arguments['post'];
         $section = $this->arguments['section'] ?? '';
         $pageUid = (int) $post->getUid();
-        $uriBuilder = GeneralUtility::makeInstance(UriBuilder::class);
-        $createAbsoluteUri = (bool)$this->arguments['createAbsoluteUri'];
-        $uri = $uriBuilder->reset()
-            ->setTargetPageUid($pageUid)
-            ->setSection($section)
-            ->setCreateAbsoluteUri($createAbsoluteUri)
-            ->build();
+
+        $request = $this->renderingContext->getAttribute(ServerRequestInterface::class);
+
+        $site = $request->getAttribute('site');
+        Assert::notEmpty($site);
+
+        /** @var PageRouter $router */
+        $router = $site->getRouter();
+
+        $uri = (string) $router->generateUri($pageUid, [], $section);
+
         if ($uri !== '') {
             if (isset($this->arguments['returnUri']) && $this->arguments['returnUri'] === true) {
                 return htmlspecialchars($uri, ENT_QUOTES | ENT_HTML5);

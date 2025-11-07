@@ -12,9 +12,9 @@ namespace T3G\AgencyPack\Blog\ViewHelpers\Link;
 
 use Psr\Http\Message\ServerRequestInterface;
 use T3G\AgencyPack\Blog\Domain\Model\Category;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Mvc\Web\Routing\UriBuilder;
+use TYPO3\CMS\Core\Routing\PageRouter;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractTagBasedViewHelper;
+use Webmozart\Assert\Assert;
 
 class CategoryViewHelper extends AbstractTagBasedViewHelper
 {
@@ -46,19 +46,32 @@ class CategoryViewHelper extends AbstractTagBasedViewHelper
         $arguments = [
             'category' => $category->getUid(),
         ];
-        $uriBuilder = GeneralUtility::makeInstance(UriBuilder::class);
-        $uriBuilder->reset()
-            ->setTargetPageUid($pageUid);
+
+
+        $typeNum = null;
         if ($rssFormat) {
-            $rssTypeNum = (int)(
+            $typeNum = (int)(
                 $this->getRequest()->getAttribute('frontend.typoscript')->getSetupTree()
                 ->getChildByName('blog_rss_category')
                 ?->getChildByName('typeNum')
                 ?->getValue() ?? 0
             );
-            $uriBuilder->setTargetPageType($rssTypeNum);
         }
-        $uri = $uriBuilder->uriFor('listPostsByCategory', $arguments, 'Post', 'Blog', 'Category');
+
+        $site = $this->getRequest()->getAttribute('site');
+        Assert::notEmpty($site);
+
+        /** @var PageRouter $router */
+        $router = $site->getRouter();
+
+        $uri = (string) $router->generateUri($pageUid, [
+            'tx_blog_category' => [
+                ...$arguments,
+                'controller' => 'Post',
+                'action' => 'listPostsByCategory',
+            ],
+            'type' => $typeNum
+        ]);
 
         if ($uri !== '') {
             $linkText = $this->renderChildren() ?? $category->getTitle();

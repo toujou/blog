@@ -12,9 +12,9 @@ namespace T3G\AgencyPack\Blog\ViewHelpers\Link;
 
 use Psr\Http\Message\ServerRequestInterface;
 use T3G\AgencyPack\Blog\Domain\Model\Tag;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Mvc\Web\Routing\UriBuilder;
+use TYPO3\CMS\Core\Routing\PageRouter;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractTagBasedViewHelper;
+use Webmozart\Assert\Assert;
 
 class TagViewHelper extends AbstractTagBasedViewHelper
 {
@@ -46,19 +46,32 @@ class TagViewHelper extends AbstractTagBasedViewHelper
         $arguments = [
             'tag' => $tag->getUid(),
         ];
-        $uriBuilder = GeneralUtility::makeInstance(UriBuilder::class);
-        $uriBuilder->reset()
-            ->setTargetPageUid($pageUid);
+
+        $typeNum = null;
         if ($rssFormat) {
-            $rssTypeNum = (int)(
+            $typeNum = (int)(
                 $this->getRequest()->getAttribute('frontend.typoscript')->getSetupTree()
                 ->getChildByName('blog_rss_tag')
                 ?->getChildByName('typeNum')
                 ?->getValue() ?? 0
             );
-            $uriBuilder->setTargetPageType($rssTypeNum);
         }
-        $uri = $uriBuilder->uriFor('listPostsByTag', $arguments, 'Post', 'Blog', 'Tag');
+
+        $site = $this->getRequest()->getAttribute('site');
+        Assert::notEmpty($site);
+
+        /** @var PageRouter $router */
+        $router = $site->getRouter();
+
+        $uri = (string) $router->generateUri($pageUid, [
+            'tx_blog_tag' => [
+                ...$arguments,
+                'controller' => 'Post',
+                'action' => 'listPostsByTag',
+            ],
+            'type' => $typeNum,
+        ]);
+
         if ($uri !== '') {
             $linkText = $this->renderChildren() ?? $tag->getTitle();
             $this->tag->addAttribute('href', $uri);

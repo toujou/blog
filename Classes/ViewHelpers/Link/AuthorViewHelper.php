@@ -12,9 +12,9 @@ namespace T3G\AgencyPack\Blog\ViewHelpers\Link;
 
 use Psr\Http\Message\ServerRequestInterface;
 use T3G\AgencyPack\Blog\Domain\Model\Author;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Mvc\Web\Routing\UriBuilder;
+use TYPO3\CMS\Core\Routing\PageRouter;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractTagBasedViewHelper;
+use Webmozart\Assert\Assert;
 
 class AuthorViewHelper extends AbstractTagBasedViewHelper
 {
@@ -47,8 +47,7 @@ class AuthorViewHelper extends AbstractTagBasedViewHelper
 
     protected function buildUriFromDetailsPage(Author $author, bool $rssFormat): string
     {
-        $uriBuilder = $this->getUriBuilder((int) $author->getDetailsPage(), [], $rssFormat);
-        return $this->buildAnchorTag($uriBuilder->build(), $author);
+        return $this->buildUrl((int) $author->getDetailsPage(), [], $rssFormat);
     }
 
     protected function buildUriFromDefaultPage(Author $author, bool $rssFormat): string
@@ -59,19 +58,28 @@ class AuthorViewHelper extends AbstractTagBasedViewHelper
             ?->getChildByName('settings')
             ?->toArray() ?? [];
         $authorUid = (int)($settings['authorUid'] ?? 0);
-        $uriBuilder = $this->getUriBuilder($authorUid, [], $rssFormat);
+
         $arguments = [
-            'author' => $author->getUid(),
+            'tx_blog_authorposts' => [
+                'author' => $author->getUid(),
+                'controller' => 'Post',
+                'action' => 'listPostsByAuthor',
+            ],
         ];
-        return $this->buildAnchorTag($uriBuilder->uriFor('listPostsByAuthor', $arguments, 'Post', 'Blog', 'AuthorPosts'), $author);
+
+        return $this->buildAnchorTag($this->buildUrl($authorUid, $arguments, $rssFormat), $author);
     }
 
-    protected function getUriBuilder(int $pageUid, array $additionalParams, bool $rssFormat): UriBuilder
+    protected function buildUrl(int $pageUid, array $additionalParams, bool $rssFormat): string
     {
-        $uriBuilder = GeneralUtility::makeInstance(UriBuilder::class);
-        $uriBuilder->reset()
-            ->setTargetPageUid($pageUid)
-            ->setArguments($additionalParams);
+        $request = $this->renderingContext->getAttribute(ServerRequestInterface::class);
+
+        $site = $request->getAttribute('site');
+        Assert::notEmpty($site);
+
+        /** @var PageRouter $router */
+        $router = $site->getRouter();
+
         if ($rssFormat) {
             $rssTypeNum = (int)(
                 $this->getRequest()->getAttribute('frontend.typoscript')->getSetupTree()
@@ -79,11 +87,12 @@ class AuthorViewHelper extends AbstractTagBasedViewHelper
                 ?->getChildByName('typeNum')
                 ?->getValue() ?? 0
             );
-            $uriBuilder
-                ->setTargetPageType($rssTypeNum);
+            $additionalParams['type'] = $rssTypeNum;
         }
 
-        return $uriBuilder;
+        return (string) $router->generateUri($pageUid, [
+            ...$additionalParams,
+        ]);
     }
 
     protected function buildAnchorTag(string $uri, Author $author): string
