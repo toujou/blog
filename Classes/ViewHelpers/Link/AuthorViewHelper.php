@@ -57,8 +57,12 @@ class AuthorViewHelper extends AbstractTagBasedViewHelper
             ?->getChildByName('tx_blog')
             ?->getChildByName('settings')
             ?->toArray() ?? [];
-        $authorUid = (int)($settings['authorUid'] ?? 0);
 
+        $authorPageUid = (int)($settings['authorUid'] ?? 0);
+
+        if (0 === $authorPageUid) {
+            return $author->getName();
+        }
         $arguments = [
             'tx_blog_authorposts' => [
                 'author' => $author->getUid(),
@@ -67,7 +71,7 @@ class AuthorViewHelper extends AbstractTagBasedViewHelper
             ],
         ];
 
-        return $this->buildAnchorTag($this->buildUrl($authorUid, $arguments, $rssFormat), $author);
+        return $this->buildAnchorTag($this->buildUrl($authorPageUid, $arguments, $rssFormat), $author);
     }
 
     protected function buildUrl(int $pageUid, array $additionalParams, bool $rssFormat): string
